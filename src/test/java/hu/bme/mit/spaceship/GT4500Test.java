@@ -1,40 +1,81 @@
 package hu.bme.mit.spaceship;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class GT4500Test {
+class GT4500Test {
 
-  private GT4500 ship;
+    private GT4500 ship;
+    private TorpedoStore primaryMock;
+    private TorpedoStore secondaryMock;
 
-  @BeforeEach
-  public void init(){
-    this.ship = new GT4500();
-  }
+    @BeforeEach
+    void init() {
+        primaryMock = mock(TorpedoStore.class);
+        secondaryMock = mock(TorpedoStore.class);
+        ship = new GT4500(primaryMock, secondaryMock);
+    }
 
-  @Test
-  public void fireTorpedo_Single_Success(){
-    // Arrange
+    @Test
+    void fireTorpedo_Single_Success() {
+        when(primaryMock.isEmpty()).thenReturn(false);
+        when(secondaryMock.isEmpty()).thenReturn(true);
 
-    // Act
-    boolean result = ship.fireTorpedo(FiringMode.SINGLE);
+        boolean result = ship.fireTorpedo(FiringMode.SINGLE);
 
-    // Assert
-    assertEquals(true, result);
-  }
+        assertTrue(result);
+        verify(primaryMock).fire(1);
+        verify(secondaryMock, never()).fire(1);
+    }
 
-  @Test
-  public void fireTorpedo_All_Success(){
-    // Arrange
+    @Test
+    void fireTorpedo_All_Success() {
+        when(primaryMock.isEmpty()).thenReturn(false);
+        when(secondaryMock.isEmpty()).thenReturn(false);
 
-    // Act
-    boolean result = ship.fireTorpedo(FiringMode.ALL);
+        boolean result = ship.fireTorpedo(FiringMode.ALL);
 
-    // Assert
-    assertEquals(true, result);
-  }
+        assertTrue(result);
+        verify(primaryMock).fire(1);
+        verify(secondaryMock).fire(1);
+    }
 
+    @Test
+    void fireTorpedo_Single_Failure() {
+        when(primaryMock.isEmpty()).thenReturn(true);
+        when(secondaryMock.isEmpty()).thenReturn(false);
+
+        boolean result = ship.fireTorpedo(FiringMode.SINGLE);
+
+        assertFalse(result);
+        verify(primaryMock, never()).fire(1);
+        verify(secondaryMock).fire(1);
+    }
+
+    @Test
+    void fireTorpedo_All_Failure() {
+        when(primaryMock.isEmpty()).thenReturn(true);
+        when(secondaryMock.isEmpty()).thenReturn(true);
+
+        boolean result = ship.fireTorpedo(FiringMode.ALL);
+
+        assertFalse(result);
+        verify(primaryMock, never()).fire(1);
+        verify(secondaryMock, never()).fire(1);
+    }
+
+    @Test
+    void fireTorpedo_Alternative_Success() {
+        when(primaryMock.isEmpty()).thenReturn(true);
+        when(secondaryMock.isEmpty()).thenReturn(false);
+
+        boolean result = ship.fireTorpedo(FiringMode.SINGLE);
+
+        assertTrue(result);
+        verify(primaryMock, never()).fire(1);
+        verify(secondaryMock).fire(1);
+    }
 }
+
